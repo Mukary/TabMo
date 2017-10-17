@@ -1,12 +1,6 @@
-import org.apache.spark.sql.SparkSession
+//Converting JSON file to CSV with headers - by Julien Hebmann
 
-val spark = SparkSession
-  .builder()
-  .appName("Spark SQL basic example")
-  .config("spark.some.config.option", "some-value")
-  .getOrCreate()
+ val data = spark.read.json("data-students.json")
+ val stringify = udf((vs: Seq[String]) => s"""[${vs.mkString(",")}]""")
 
-import spark.implicits._
-
-val dataJSON = spark.read.json("sample-data")
-dataJSON.show()
+ data.withColumn("size", stringify($"size")).coalesce(1).write.option("header","true").csv("./sample-data.csv") 
