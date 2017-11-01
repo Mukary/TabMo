@@ -10,9 +10,8 @@ object Process{
     import spark.implicits._
     
     val sourceJson = spark.read.json("/home/data/data-students.json")
-    val cleansedJson = sourceJson.drop("impid").withColumn("timestamp", sourceJson("timestamp").cast(TimestampType).cast(DateType)).withColumn("os", lower($"os"))
+    val cleansedJson = sourceJson.drop("network").drop("impid").withColumn("timestamp", sourceJson("timestamp").cast(TimestampType).cast(DateType)).withColumn("os", lower($"os"))
     
-    cleansedJson.show
-    cleansedJson.write.json("/home/data/data-students-pure.json")
+    cleansedJson.withColumn("size", concat(lit("["), concat_ws(",",$"size"),lit("]"))).coalesce(1).write.option("header","true").csv("data-csv")
    }
 }
