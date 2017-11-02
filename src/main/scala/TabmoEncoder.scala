@@ -1,12 +1,13 @@
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer}
+import org.apache.spark.sql.DataFrame
 
 object TabmoEncoder{
-  def main(args: Array[String]){
+  def getVectorizedData(sourceFile: String): DataFrame = {
   // Load and parse the data file.
   // Cache the data since we will use it again to compute training error.
   val spark = SparkSession.builder.appName("Web Intelligence").getOrCreate()
-  val data = spark.read.format("csv").option("header", "true").load(args(0))
+  val data = spark.read.format("csv").option("header", "true").load(sourceFile)
 
   //appOrSite
   val appOrSiteIndexer = new StringIndexer()
@@ -151,7 +152,7 @@ object TabmoEncoder{
   val dataIndexed = interestsEncoded.drop("appOrSite")
       .drop("exchange")
       .drop("interests")
-      .drop("label")
+      //.drop("label")
       .drop("media")
       .drop("os")
       .drop("publisher")
@@ -161,16 +162,16 @@ object TabmoEncoder{
       .drop("appOrSiteIndex")
       .drop("exchangeIndex")
       .drop("interestsIndex")
-      .drop("labelIndex")
+      //.drop("labelIndex")
       .drop("mediaIndex")
       .drop("osIndex")
       .drop("publisherIndex")
       .drop("sizeIndex")
       .drop("periodIndex")
-      .drop("typeIndex")
-  
+      .drop("typeIndex")  
 
-  dataIndexed.show
-  //dataIndexed.coalesce(1).write.option("header","true").csv(args(1))  
+  //dataIndexed.show
+  //dataIndexed.coalesce(1).write.option("header","true").csv(args(1))
+  dataIndexed  
   }
 }
