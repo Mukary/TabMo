@@ -15,6 +15,8 @@ object Process{
     val sourceJson = spark.read.json("/home/maxcabourg/Documents/Polytech/WI/data-students.json")
     val cleansedJson = sourceJson.drop("network")
       .drop("impid")
+      .drop("city")
+      .filter("type not like 'null%' and type not like 'CLICK%'")
       .withColumn("timestamp", sourceJson("timestamp").cast(TimestampType).cast(DateType))
       .withColumn("os", lower($"os"))
       .withColumnRenamed("timestamp", "period")
