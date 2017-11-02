@@ -12,7 +12,7 @@ object Process{
 
     import spark.implicits._
     
-    val sourceJson = spark.read.json("/home/maxcabourg/Documents/Polytech/WI/data-students.json")
+    val sourceJson = spark.read.json(args(0))
     val cleansedJson = sourceJson.drop("network")
       .drop("impid")
       .drop("city")
@@ -21,6 +21,6 @@ object Process{
       .withColumn("os", lower($"os"))
       .withColumnRenamed("timestamp", "period")
     
-    cleansedJson.withColumn("size", concat(lit("["), concat_ws(",",$"size"),lit("]"))).coalesce(1).write.option("header","true").csv("/home/maxcabourg/Documents/Polytech/WI/data-csv")
+    cleansedJson.withColumn("size", concat(lit("["), concat_ws(",",$"size"),lit("]"))).coalesce(1).write.option("header","true").csv(args(1))
    }
 }
