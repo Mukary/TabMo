@@ -45,19 +45,13 @@ object TabmoEncoder{
   
   val labelIndexed = labelIndexer.fit(exchangeEncoded).transform(exchangeEncoded)
 
-  val labelEncoder = new OneHotEncoder()
-      .setInputCol("labelIndex")
-      .setOutputCol("labelVec")
-
-  val labelEncoded = labelEncoder.transform(labelIndexed)
-
   //Media
   val mediaIndexer = new StringIndexer()
       .setHandleInvalid("skip")
       .setInputCol("media")
       .setOutputCol("mediaIndex")
     
-  val mediaIndexed = mediaIndexer.fit(labelEncoded).transform(labelEncoded)
+  val mediaIndexed = mediaIndexer.fit(labelIndexed).transform(labelIndexed)
 
   val mediaEncoder = new OneHotEncoder()
       .setInputCol("mediaIndex")
@@ -152,7 +146,7 @@ object TabmoEncoder{
   val dataIndexed = interestsEncoded.drop("appOrSite")
       .drop("exchange")
       .drop("interests")
-      //.drop("label")
+      .drop("label")
       .drop("media")
       .drop("os")
       .drop("publisher")
