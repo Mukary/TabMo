@@ -24,6 +24,11 @@ object Process{
     val conf = new SparkConf().setMaster("local[2]")
     val spark = SparkSession.builder.appName("Web Intelligence").config(conf).getOrCreate()
 
+
+    val coder: (Int => String) = (arg: Int) => {if (((18 <= arg) && (arg <= 23)) || ((0 <= arg) && (arg <= 5))) "Night" else if ((6 < arg) && (arg < 11)) "Afternoon" else "Morning"}
+    val timestampToConvert = udf(coder)
+
+
     import spark.implicits._
     
     val sourceJson = spark.read.json(args(0))
@@ -31,7 +36,9 @@ object Process{
       .drop("user")
       .drop("impid")
       .drop("city")
-      .withColumn("timestamp", sourceJson("timestamp").cast(TimestampType).cast(DateType))
+      .withColumn("timestamp", $"timestamp".cast("timestamp"))
+      .withColumn("timestamp", hour($"timestamp"))
+      .withColumn("timestamp", timestampToConvert(col("timestamp")))
       .withColumn("os", lower($"os"))
       .withColumnRenamed("timestamp", "period")
 
