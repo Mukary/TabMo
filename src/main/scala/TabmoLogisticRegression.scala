@@ -1,16 +1,13 @@
-import org.apache.spark.mllib.classification.{LogisticRegressionModel, LogisticRegressionWithLBFGS}
+import org.apache.spark.mllib.classification.LogisticRegressionWithLBFGS
 import org.apache.spark.mllib.evaluation.MulticlassMetrics
-import org.apache.spark.mllib.linalg.{SparseVector, Vector, Vectors}
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SparkConf, SparkContext}
-import TabmoEncoder._
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.sql.types.DoubleType
 
 object TabmoLogisticRegression{
-  def bool2double(b: Boolean) = if (b) 1f else 0f
 
   def main(args: Array[String]){
     val conf = new SparkConf().setMaster("local[2]").setAppName("Web Intelligence")
@@ -30,29 +27,23 @@ object TabmoLogisticRegression{
     val mllibOutput = MLUtils.convertVectorColumnsFromML(output)
     val labelIndex = rawData.columns.indexOf("labelIndex")
 
-
-    //TODO: fix ClassCastException: java.lang.String cannot be cast to java.lang.Boolean
     val data = mllibOutput.rdd.map(row => {
        LabeledPoint(row.getDouble(labelIndex), row.getAs("features"))
      })
 
-    // Split data into training (60%) and test (40%).
     val splits = data.randomSplit(Array(0.8, 0.2), seed = 11L)
     val training = splits(0).cache()
     val test = splits(1)
 
-    // Run training algorithm to build the model
     val model = new LogisticRegressionWithLBFGS()
       .setNumClasses(2)
       .run(training)
 
-    // Compute raw scores on the test set.
     val predictionAndLabels = test.map { case LabeledPoint(label, features) =>
       val prediction = model.predict(features)
       (prediction, label)
     }
 
-    // Get evaluation metrics.
     val metrics = new MulticlassMetrics(predictionAndLabels)
     val accuracy = metrics.accuracy
     val confusionMatrix = metrics.confusionMatrix

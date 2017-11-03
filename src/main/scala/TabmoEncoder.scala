@@ -3,6 +3,12 @@ import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer}
 import org.apache.spark.sql.DataFrame
 
 object TabmoEncoder{
+
+  /**
+    * String indexes and one-hot encodes datas in a file
+    * @param sourceFile full path of the file containing datas
+    * @return dataframe with encoded datas
+    */
   def getVectorizedData(sourceFile: String): DataFrame = {
   // Load and parse the data file.
   // Cache the data since we will use it again to compute training error.
