@@ -1,5 +1,5 @@
 import org.apache.spark.ml.{Pipeline, PipelineModel}
-import org.apache.spark.ml.classification.LogisticRegression
+import org.apache.spark.ml.classification.{DecisionTreeClassifier, LogisticRegression, NaiveBayes}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.ml.feature.VectorAssembler
@@ -45,17 +45,23 @@ object TabmoLogisticRegression{
     val interestsEncoder = getInterestsEncoder
 
     //Fuse features in one column only
-    val assembler = new VectorAssembler()
+    val assemblerEncoder = new VectorAssembler()
       .setInputCols(Array("bidfloor", "appOrSiteVec", "exchangeVec", "mediaVec", "osVec", "publisherVec", "sizeVec", "periodVec", "interestsVec"))
       .setOutputCol("features")
+
+    val assemblerIndexer = new VectorAssembler()
+        .setInputCols(Array("bidfloor", "appOrSiteIndex", "exchangeIndex", "mediaIndex", "osIndex", "publisherIndex", "sizeIndex", "periodIndex", "interestsIndex"))
+        .setOutputCol("features")
 
     val datas = datasTemp.withColumn("bidfloor", datasTemp("bidfloor").cast(DoubleType)).withColumn("label", string2doubleFunc(col("label")))
     val datasToPredict = datasTemp2.withColumn("bidfloor", datasTemp2("bidfloor").cast(DoubleType))//.withColumn("label", lit(1.0d))
 
     val lr = new LogisticRegression().setMaxIter(10).setRegParam(0.3).setElasticNetParam(0.8).setLabelCol("label").setFeaturesCol("features")
+    val dt = new DecisionTreeClassifier().setLabelCol("label").setFeaturesCol("features").setMaxBins(1024)
+    val nb = new NaiveBayes().setFeaturesCol("features").setSmoothing(1)
     val pipeline = new Pipeline().setStages(Array(appOrSiteIndexer, exchangeIndexer, mediaIndexer, osIndexer, publisherIndexer,
-      sizeIndexer, periodIndexer, interestsIndexer, appOrSiteEncoder, exchangeEncoder, mediaEncoder, osEncoder, publisherEncoder, sizeEncoder, periodEncoder,
-      interestsEncoder, assembler, lr))
+      sizeIndexer, periodIndexer, interestsIndexer,/*appOrSiteEncoder, exchangeEncoder, mediaEncoder, osEncoder, publisherEncoder, sizeEncoder, periodEncoder,
+      interestsEncoder, */assemblerIndexer, nb ))
 
     val splits = datas.randomSplit(Array(0.8, 0.2))
     val model = pipeline.fit(splits(0))
