@@ -58,12 +58,11 @@ object TabmoLogisticRegression{
       interestsEncoder, assembler, lr))
 
     val splits = datas.randomSplit(Array(0.8, 0.2))
-    val model2 = pipeline.fit(splits(0))
-    model2.write.overwrite().save("/tmp/spark-logistic-regression-model")
+    val model = pipeline.fit(splits(0))
     /*println(s"Coefficients: ${model.coefficients} Intercept: ${model.intercept}")
 
     val predictions = model.transform(splits(1))
-    val labelAndPredictions = predictions.select( "labelIndex", "prediction")
+    val labelAndPredictions = predictions.select "labelIndex", "prediction")
     val truep = labelAndPredictions.filter($"prediction" === 0.0).filter($"labelIndex" === $"prediction").count
     val truen = labelAndPredictions.filter($"prediction" === 1.0).filter($"labelIndex" === $"prediction").count
     val falseN = labelAndPredictions.filter($"prediction" === 0.0).filter(not($"labelIndex" === $"prediction")).count
@@ -71,9 +70,25 @@ object TabmoLogisticRegression{
 
     println(truep, truen, falseN, falseP)*/
 
-    val sameModel = PipelineModel.load("/tmp/spark-logistic-regression-model")
-    sameModel.transform(splits(1)).show(5)
-    sameModel.transform(datasToPredict).show(5)
+    val testedDatas = model.transform(splits(1))
+    val labelAndPredictions = testedDatas.select("label", "prediction")
+
+    import spark.implicits._
+    val truep = labelAndPredictions.filter($"prediction" === 0.0).filter($"label" === $"prediction").count
+    val truen = labelAndPredictions.filter($"prediction" === 1.0).filter($"label" === $"prediction").count
+    val falseN = labelAndPredictions.filter($"prediction" === 0.0).filter(not($"label" === $"prediction")).count
+    val falseP = labelAndPredictions.filter($"prediction" === 1.0).filter(not($"label" === $"prediction")).count
+
+    val recall = truep / (truep + falseN).toDouble
+    val precision = truep / (truep + falseP).toDouble
+
+    println(s"TP = $truep, TN = $truen, FN = $falseN, FP = $falseP")
+    println(s"recall = $recall")
+    println(s"precision = $precision")
+
+    val predictedDatas = model.transform(datasToPredict)
+
+    //val datasToWrite = datasTemp2.withColumn("prediction", predictedDatas.)
 
   }
 }
