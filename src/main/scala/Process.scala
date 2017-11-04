@@ -40,6 +40,7 @@ object Process{
       .drop("user")
       .drop("impid")
       .drop("city")
+      .drop("type")
       .withColumn("timestamp", $"timestamp".cast("timestamp"))
       .withColumn("timestamp", hour($"timestamp"))
       .withColumn("timestamp", timestampToConvert(col("timestamp")))

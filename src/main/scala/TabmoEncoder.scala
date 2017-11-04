@@ -9,7 +9,7 @@ object TabmoEncoder{
     * @param sourceFile full path of the file containing datas
     * @return dataframe with encoded datas
     */
-  def getVectorizedData(sourceFile: String): DataFrame = {
+  def getVectorizedData(sourceFile: String, hasLabel: Boolean): DataFrame = {
   // Load and parse the data file.
   // Cache the data since we will use it again to compute training error.
   val spark = SparkSession.builder.appName("Web Intelligence").getOrCreate()
@@ -43,21 +43,13 @@ object TabmoEncoder{
 
   val exchangeEncoded = exchangeEncoder.transform(exchangeIndexed)
 
-  //Label
-  val labelIndexer = new StringIndexer()
-      .setHandleInvalid("skip")
-      .setInputCol("label")
-      .setOutputCol("labelIndex")
-  
-  val labelIndexed = labelIndexer.fit(exchangeEncoded).transform(exchangeEncoded)
-
   //Media
   val mediaIndexer = new StringIndexer()
       .setHandleInvalid("skip")
       .setInputCol("media")
       .setOutputCol("mediaIndex")
     
-  val mediaIndexed = mediaIndexer.fit(labelIndexed).transform(labelIndexed)
+  val mediaIndexed = mediaIndexer.fit(exchangeEncoded).transform(exchangeEncoded)
 
   val mediaEncoder = new OneHotEncoder()
       .setInputCol("mediaIndex")
@@ -121,7 +113,7 @@ object TabmoEncoder{
   val periodEncoded = periodEncoder.transform(periodIndexed)
 
   //Type
-  val typeIndexer = new StringIndexer()
+  /*val typeIndexer = new StringIndexer()
       .setHandleInvalid("skip")
       .setInputCol("type")
       .setOutputCol("typeIndex")
@@ -132,21 +124,48 @@ object TabmoEncoder{
       .setInputCol("typeIndex")
       .setOutputCol("typeVec")
 
-  val typeEncoded = typeEncoder.transform(typeIndexed)
+  val typeEncoded = typeEncoder.transform(typeIndexed)*/
+
+    val labelIndexer = {
+      if(hasLabel) new StringIndexer()
+        .setHandleInvalid("skip")
+        .setInputCol("label")
+        .setOutputCol("labelIndex")
+      else
+        null
+    }
+
+    val labelIndexed = {
+      if(labelIndexer != null)
+        labelIndexer.fit(periodEncoded).transform(periodEncoded)
+      else
+        null
+    }
 
   //Interests
   val interestsIndexer = new StringIndexer()
       .setHandleInvalid("skip")
       .setInputCol("interests")
       .setOutputCol("interestsIndex")
+
+
   
-  val interestsIndexed = interestsIndexer.fit(typeEncoded).transform(typeEncoded)
+  val interestsIndexed = {
+    if(labelIndexed != null)
+      interestsIndexer.fit(labelIndexed).transform(labelIndexed)
+    else
+      interestsIndexer.fit(periodEncoded).transform(periodEncoded)
+  }
+
+
 
   val interestsEncoder = new OneHotEncoder()
       .setInputCol("interestsIndex")
       .setOutputCol("interestsVec")
 
   val interestsEncoded = interestsEncoder.transform(interestsIndexed)
+
+
 
   //Drop useless columns
   val dataIndexed = interestsEncoded.drop("appOrSite")
@@ -158,7 +177,7 @@ object TabmoEncoder{
       .drop("publisher")
       .drop("size")
       .drop("period")
-      .drop("type")
+      //.drop("type")
       .drop("appOrSiteIndex")
       .drop("exchangeIndex")
       .drop("interestsIndex")
@@ -168,7 +187,7 @@ object TabmoEncoder{
       .drop("publisherIndex")
       .drop("sizeIndex")
       .drop("periodIndex")
-      .drop("typeIndex")  
+      //.drop("typeIndex")
 
   //dataIndexed.show
   //dataIndexed.coalesce(1).write.option("header","true").csv(args(1))
