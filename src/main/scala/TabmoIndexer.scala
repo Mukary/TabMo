@@ -2,6 +2,70 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.ml.feature.StringIndexer
 
 object TabmoIndexer{
+
+  def getAppOrSiteIndexer = {
+    new StringIndexer()
+      .setHandleInvalid("skip")
+      .setInputCol("appOrSite")
+      .setOutputCol("appOrSiteIndex")
+  }
+
+  def getExchangeIndexer = {
+    new StringIndexer()
+      .setHandleInvalid("skip")
+      .setInputCol("exchange")
+      .setOutputCol("exchangeIndex")
+  }
+
+  def getLabelIndexer = {
+    new StringIndexer()
+      .setHandleInvalid("skip")
+      .setInputCol("label")
+      .setOutputCol("labelIndex")
+  }
+
+  def getMediaIndexer = {
+    new StringIndexer()
+      .setHandleInvalid("skip")
+      .setInputCol("media")
+      .setOutputCol("mediaIndex")
+  }
+
+  def getOsIndexer = {
+    new StringIndexer()
+      .setHandleInvalid("skip")
+      .setInputCol("os")
+      .setOutputCol("osIndex")
+  }
+
+  def getSizeIndexer = {
+    new StringIndexer()
+      .setHandleInvalid("skip")
+      .setInputCol("size")
+      .setOutputCol("sizeIndex")
+  }
+
+  def getPublisherIndexer = {
+    new StringIndexer()
+      .setHandleInvalid("skip")
+      .setInputCol("publisher")
+      .setOutputCol("publisherIndex")
+  }
+
+  def getPeriodIndexer = {
+    new StringIndexer()
+      .setHandleInvalid("skip")
+      .setInputCol("period")
+      .setOutputCol("periodIndex")
+  }
+
+  def getInterestsIndexer = {
+    new StringIndexer()
+      .setHandleInvalid("skip")
+      .setInputCol("interests")
+      .setOutputCol("interestsIndex")
+  }
+
   def main(args: Array[String]){
   // Load and parse the data file.
   // Cache the data since we will use it again to compute training error.

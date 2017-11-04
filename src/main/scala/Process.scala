@@ -54,5 +54,5 @@ object Process{
 }
 
 /*
-val cleansedJson = sourceJson.drop("network").drop("user").drop("impid").drop("city").withColumn("timestamp", sourceJson("timestamp").cast(TimestampType).cast(DateType)).withColumn("os", lower($"os")).withColumnRenamed("timestamp", "period")
+val cleansedJson = sourceJson.drop("network").drop("user").drop("impid").drop("city").drop(type).withColumn("timestamp", sourceJson("timestamp").cast(TimestampType).cast(DateType)).withColumn("os", lower($"os")).withColumnRenamed("timestamp", "period")
  */
