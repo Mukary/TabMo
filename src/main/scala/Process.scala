@@ -32,6 +32,15 @@ object Process{
     val coder: (Int => String) = (arg: Int) => {if (((18 <= arg) && (arg <= 23)) || ((0 <= arg) && (arg <= 5))) "Night" else if ((6 < arg) && (arg < 11)) "Afternoon" else "Morning"}
     val timestampToConvert = udf(coder)
 
+    /**
+    * Delete all the interests which are not IAB writed
+    * @param arg : one value from the column interests (one array of interests)
+    * @return the fixed array of interests
+    */
+    val coder2: (String => String) = (arg: String) => { try { if (arg.length() > 0) { val interests = arg.split(","); var stringResult = ""; for (interest <- interests) { if (interest.startsWith("IAB")) { stringResult += interest; stringResult += ","; } else stringResult.concat("KO") }; stringResult.substring(0, stringResult.length()-1); } else "Didn't work" } catch { case _: Throwable => "No interest" } }
+    val IABToProcess = udf(coder2)
+    
+
 
     import spark.implicits._
     
@@ -43,6 +52,7 @@ object Process{
       .drop("type")
       .withColumn("timestamp", $"timestamp".cast("timestamp"))
       .withColumn("timestamp", hour($"timestamp"))
+      .withColumn("interests", IABToProcess(col("interests")))
       .withColumn("timestamp", timestampToConvert(col("timestamp")))
       .withColumn("os", lower($"os"))
       .withColumnRenamed("timestamp", "period")
