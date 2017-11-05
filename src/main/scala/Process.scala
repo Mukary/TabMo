@@ -29,7 +29,11 @@ object Process{
     * @param arg : one value from the column timestamp (one hour)
     * @return the correct period regarding the hour in input
     */
-    val coder: (Int => String) = (arg: Int) => {if (((18 <= arg) && (arg <= 23)) || ((0 <= arg) && (arg <= 5))) "Night" else if ((6 < arg) && (arg < 11)) "Afternoon" else "Morning"}
+    val coder: (Int => String) = (arg: Int) => {
+	if (((18 <= arg) && (arg <= 23)) || ((0 <= arg) && (arg <= 5))) "Night" 
+	else if ((6 < arg) && (arg < 11)) "Morning" 
+	else "Afternoon"
+    }
     val timestampToConvert = udf(coder)
 
     /**
@@ -37,7 +41,32 @@ object Process{
     * @param arg : one value from the column interests (one array of interests)
     * @return the fixed array of interests
     */
-    val coder2: (String => String) = (arg: String) => { try { if (arg.length() > 0) { val interests = arg.split(","); var stringResult = ""; for (interest <- interests) { if (interest.startsWith("IAB")) { stringResult += interest; stringResult += ","; } else stringResult.concat("KO") }; stringResult.substring(0, stringResult.length()-1); } else "Didn't work" } catch { case _: Throwable => "No interest" } }
+    val coder2: (String => String) = (arg: String) => { 
+		try { 
+			if (arg.length() > 0) { 
+				val interests = arg.split(","); 
+				var stringResult = ""; 
+				var processOnStringResult = List[String](); 
+				for (interest <- interests) { 
+					val interestsSplitByDash = interest.split("-"); 
+					for (interestSplitByDash <- interestsSplitByDash) { 
+						if (interestSplitByDash.startsWith("IAB")) { 
+							if (!processOnStringResult.exists(x => x == interestSplitByDash)) { 
+								processOnStringResult = interestSplitByDash::processOnStringResult; 
+								stringResult += interestSplitByDash; 
+								stringResult += ","; 
+							} 
+						} 
+						else stringResult.concat("KO") 
+					}; 
+				}; 
+				stringResult.substring(0, stringResult.length()-1); 
+			} else "Didn't work" 
+		} 
+		catch { 
+			case _: Throwable => "No interest" 
+		} 
+    }
     val IABToProcess = udf(coder2)
     
 
