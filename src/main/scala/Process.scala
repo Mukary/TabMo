@@ -20,7 +20,7 @@ object Process{
     * Cleans the datas given in input
     * @param args
     */
-   def main(args: Array[String]){
+   def getProcessedData(file: String): DataFrame = {
     val conf = new SparkConf().setMaster("local[2]")
     val spark = SparkSession.builder.appName("Web Intelligence").config(conf).getOrCreate()
 
@@ -73,7 +73,7 @@ object Process{
 
     import spark.implicits._
     
-    val sourceJson = spark.read.json(args(0))
+    val sourceJson = spark.read.json(file)
     val cleansedJson: DataFrame = sourceJson.drop("network")
       .drop("user")
       .drop("impid")
@@ -86,12 +86,7 @@ object Process{
       .withColumn("os", lower($"os"))
       .withColumnRenamed("timestamp", "period")
 
-     val filledEmptyBidfloor = cleansedJson.na.fill(findMostCommonBidfloor(cleansedJson), Seq("bidfloor"))
-
-    filledEmptyBidfloor.withColumn("size", concat(lit("["), concat_ws(",",$"size"),lit("]"))).coalesce(1).write.option("header","true").csv(args(1))
+    val filledEmptyBidfloor = cleansedJson.na.fill(findMostCommonBidfloor(cleansedJson), Seq("bidfloor"))
+    filledEmptyBidfloor.withColumn("size", concat(lit("["), concat_ws(",",$"size"),lit("]")))
    }
 }
-
-/*
-val cleansedJson = sourceJson.drop("network").drop("user").drop("impid").drop("city").drop(type).withColumn("timestamp", sourceJson("timestamp").cast(TimestampType).cast(DateType)).withColumn("os", lower($"os")).withColumnRenamed("timestamp", "period")
- */

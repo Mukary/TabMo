@@ -7,6 +7,7 @@ import org.apache.spark.sql.types.DoubleType
 import org.apache.spark.sql.functions._
 import TabmoIndexer._
 import TabmoEncoder._
+import Process._
 
 object TabmoLogisticRegression{
 
@@ -20,9 +21,9 @@ object TabmoLogisticRegression{
 
     sc.setLogLevel("ERROR")
 
-    val datasTemp = spark.read.format("csv").option("header", "true").load(args(0))
-    val datasTemp2 = spark.read.format("csv").option("header", "true").load(args(1))
-
+    val datasTemp = Process.getProcessedData(args(0))
+    val datasTemp2 = Process.getProcessedData(args(1))
+    
     //Indexers
     val appOrSiteIndexer = getAppOrSiteIndexer
     val exchangeIndexer = getExchangeIndexer
