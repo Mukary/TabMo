@@ -37,7 +37,7 @@ object Process{
     val timestampToConvert = udf(coder)
 
     /**
-    * Delete all the interests which are not IAB writed
+    * Delete all the interests which are not IAB writed and keep only the big categories for the IAB
     * @param arg : one value from the column interests (one array of interests)
     * @return the fixed array of interests
     */
