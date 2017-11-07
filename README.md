@@ -17,15 +17,9 @@ You will get a generated jar in /target/scala-X.XX named simple-project_X.XX-X.X
 
 ### Steps
 
-1°) Pre-process both training datas and real datas
+1) Pre-process both training datas and real datas, then predict clickers in one shot
 Use the command spark-submit :
-`spark-submit --class "Process" --master local[2] target/scala-2.XX/nameOfTheJar.jar arg1 arg2`
- with 
+`spark-submit --class "TabmoLogisticRegression" --master local[2] target/scala-2.XX/nameOfTheJar.jar arg1 arg2`
+ with: 
  -  arg1 : /ABSOLUTE-PATH/TO/TRAINING-JSON-DATAS
- -  arg2 : /ABSOLUTE-PATH/TO/DIRECTORY/STORING/CSV-DATAS
- and then a second time with the real json datas
- That will clean both the training and real datas to match our algorithm
- 
-2°) // TODO tell the command to launch the project (when project is done)
-
-
+ -  arg2 : /ABSOLUTE-PATH/TO/CSV-DATAS-TO-PREDICT
