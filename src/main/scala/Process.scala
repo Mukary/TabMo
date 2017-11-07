@@ -16,9 +16,23 @@ object Process{
       df.groupBy("bidfloor").count().reduce((x, y) => if (x.getLong(1).toInt > y.getLong(1).toInt)  x else y).getDouble(0)
     }
 
+    /**
+    * Load data source depending on its extension
+    * @param path - path of the file
+    * @return dataframe
+    */
+    def loadFile(path: String, conf: SparkConf, spark: SparkSession): DataFrame = {
+      val splitPath = path.split("\\.")
+      val extension = splitPath.last
+      extension match {
+        case "json" => spark.read.json(path)
+        case "csv" => spark.read.format("csv").load(path)
+      }
+    }
+
   /**
     * Cleans the datas given in input
-    * @param args
+    * @param file the path of the file
     */
    def getProcessedData(file: String): DataFrame = {
     val conf = new SparkConf().setMaster("local[2]")
@@ -30,9 +44,9 @@ object Process{
     * @return the correct period regarding the hour in input
     */
     val coder: (Int => String) = (arg: Int) => {
-	if (((18 <= arg) && (arg <= 23)) || ((0 <= arg) && (arg <= 5))) "Night" 
-	else if ((6 < arg) && (arg < 11)) "Morning" 
-	else "Afternoon"
+			if (((18 <= arg) && (arg <= 23)) || ((0 <= arg) && (arg <= 5))) "Night"
+			else if ((6 < arg) && (arg < 11)) "Morning"
+			else "Afternoon"
     }
     val timestampToConvert = udf(coder)
 
@@ -44,23 +58,23 @@ object Process{
     val coder2: (String => String) = (arg: String) => { 
 		try { 
 			if (arg.length() > 0) { 
-				val interests = arg.split(","); 
-				var stringResult = ""; 
-				var processOnStringResult = List[String](); 
+				val interests = arg.split(",")
+				var stringResult = ""
+				var processOnStringResult = List[String]()
 				for (interest <- interests) { 
-					val interestsSplitByDash = interest.split("-"); 
+					val interestsSplitByDash = interest.split("-")
 					for (interestSplitByDash <- interestsSplitByDash) { 
 						if (interestSplitByDash.startsWith("IAB")) { 
 							if (!processOnStringResult.exists(x => x == interestSplitByDash)) { 
-								processOnStringResult = interestSplitByDash::processOnStringResult; 
-								stringResult += interestSplitByDash; 
-								stringResult += ","; 
+								processOnStringResult = interestSplitByDash::processOnStringResult
+								stringResult += interestSplitByDash
+								stringResult += ","
 							} 
 						} 
 						else stringResult.concat("KO") 
-					}; 
-				}; 
-				stringResult.substring(0, stringResult.length()-1); 
+					}
+				}
+				stringResult.substring(0, stringResult.length()-1)
 			} else "Didn't work" 
 		} 
 		catch { 
@@ -73,8 +87,8 @@ object Process{
 
     import spark.implicits._
     
-    val sourceJson = spark.read.json(file)
-    val cleansedJson: DataFrame = sourceJson.drop("network")
+    val source = loadFile(file, conf, spark)
+    val cleansedJson: DataFrame = source.drop("network")
       .drop("user")
       .drop("impid")
       .drop("city")
