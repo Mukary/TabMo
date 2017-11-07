@@ -1,4 +1,4 @@
-import org.apache.spark.ml.{Pipeline, PipelineModel}
+import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.classification.{DecisionTreeClassifier, LogisticRegression, NaiveBayes}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -11,9 +11,12 @@ import Process._
 
 object TabmoLogisticRegression{
 
+  /**
+    * Balance an unbalanced dataset (with way more false than true labels or vice-versa)
+    * @param dataset the dataset to balance
+    * @return the balanced dataset
+    */
   def balanceDataset(dataset: DataFrame): DataFrame = {
-
-    // Re-balancing (weighting) of records to be used in the logistic loss objective function
     val numNegatives = dataset.filter(dataset("label") === 0.0d).count
     val datasetSize = dataset.count
     val balancingRatio = (datasetSize - numNegatives).toDouble / datasetSize
@@ -87,16 +90,6 @@ object TabmoLogisticRegression{
 
     val splits = datas.randomSplit(Array(0.9, 0.1))
     val model = pipeline.fit(splits(0))
-    /*println(s"Coefficients: ${model.coefficients} Intercept: ${model.intercept}")
-
-    val predictions = model.transform(splits(1))
-    val labelAndPredictions = predictions.select "labelIndex", "prediction")
-    val truep = labelAndPredictions.filter($"prediction" === 0.0).filter($"labelIndex" === $"prediction").count
-    val truen = labelAndPredictions.filter($"prediction" === 1.0).filter($"labelIndex" === $"prediction").count
-    val falseN = labelAndPredictions.filter($"prediction" === 0.0).filter(not($"labelIndex" === $"prediction")).count
-    val falseP = labelAndPredictions.filter($"prediction" === 1.0).filter(not($"labelIndex" === $"prediction")).count
-
-    println(truep, truen, falseN, falseP)*/
 
     val testedDatas = model.transform(splits(1))
     val labelAndPredictions = testedDatas.select("label", "prediction")
@@ -118,8 +111,5 @@ object TabmoLogisticRegression{
     val predictedDatas = model.transform(datasToPredict)
 
     predictedDatas.select($"appOrSite", $"bidfloor", $"exchange", $"interests", $"media", $"os", $"publisher", $"size", $"period", $"prediction").coalesce(1).write.option("header","true").csv(args(2))
-
-    //val datasToWrite = datasTemp2.withColumn("prediction", predictedDatas.)
-
   }
 }
