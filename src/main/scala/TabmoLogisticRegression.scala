@@ -40,8 +40,8 @@ object TabmoLogisticRegression{
 
     sc.setLogLevel("ERROR")
 
-    val datasTemp = Process.getProcessedData(args(0))
-    val datasTemp2 = Process.getProcessedData(args(1))
+    val datasTemp = Process.getProcessedData(args(0)).na.fill("NA")
+    val datasTemp2 = Process.getProcessedData(args(1)).na.fill("NA")
     
     //Indexers
     val appOrSiteIndexer = getAppOrSiteIndexer
@@ -116,6 +116,8 @@ object TabmoLogisticRegression{
     println(s"precision = $precision")
 
     val predictedDatas = model.transform(datasToPredict)
+
+    predictedDatas.select($"appOrSite", $"bidfloor", $"exchange", $"interests", $"media", $"os", $"publisher", $"size", $"period", $"prediction").coalesce(1).write.option("header","true").csv(args(2))
 
     //val datasToWrite = datasTemp2.withColumn("prediction", predictedDatas.)
 
