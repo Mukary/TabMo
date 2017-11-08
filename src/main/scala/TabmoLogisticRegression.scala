@@ -35,6 +35,8 @@ object TabmoLogisticRegression{
 
   val string2double: (String => Double) = (b: String) => if(b == "true") 1.0d else 0.0d
   val string2doubleFunc = udf(string2double)
+  val double2String: (Double => String) = (d: Double) => if(d == 1.0d) "true" else "false"
+  val double2StringFunc = udf(double2String)
 
   def main(args: Array[String]){
     val conf = new SparkConf().setMaster("local[2]").setAppName("Web Intelligence")
@@ -72,28 +74,29 @@ object TabmoLogisticRegression{
       .setInputCols(Array("bidfloor", "appOrSiteVec", "exchangeVec", "mediaVec", "osVec", "publisherVec", "sizeVec", "periodVec", "interestsVec"))
       .setOutputCol("features")
 
-    val assemblerIndexer = new VectorAssembler()
-        .setInputCols(Array("bidfloor", "appOrSiteIndex", "exchangeIndex", "mediaIndex", "osIndex", "publisherIndex", "sizeIndex", "periodIndex", "interestsIndex"))
-        .setOutputCol("features")
+    val chisqSelector = new ChiSqSelector()
+      .setFpr(0.05).setFeaturesCol("features")
+      .setLabelCol("label")
+      .setOutputCol("selectedFeatures")
 
-    val chisqSelector = new ChiSqSelector().setFpr(0.05).setFeaturesCol("features").setLabelCol("label").setOutputCol("selectedFeatures")
+    val datas = balanceDataset(datasTemp.withColumn("bidfloor", datasTemp("bidfloor").cast(DoubleType))
+      .withColumn("label", string2doubleFunc(col("label"))))
+    val datasToPredict = datasTemp2.withColumn("bidfloor", datasTemp2("bidfloor")
+      .cast(DoubleType))//.withColumn("label", lit(1.0d))
 
-    val datas = balanceDataset(datasTemp.withColumn("bidfloor", datasTemp("bidfloor").cast(DoubleType)).withColumn("label", string2doubleFunc(col("label"))))
-    val datasToPredict = datasTemp2.withColumn("bidfloor", datasTemp2("bidfloor").cast(DoubleType))//.withColumn("label", lit(1.0d))
-
-    val lr = new LogisticRegression().setLabelCol("label").setFeaturesCol("selectedFeatures").setWeightCol("classWeightCol")
-    val dt = new DecisionTreeClassifier().setLabelCol("label").setFeaturesCol("selectedFeatures").setMaxBins(1024)
-    val nb = new NaiveBayes().setFeaturesCol("selectedFeatures").setSmoothing(1)
+    val lr = new LogisticRegression()
+      .setLabelCol("label")
+      .setFeaturesCol("selectedFeatures")
+      .setWeightCol("classWeightCol")
     val pipeline = new Pipeline().setStages(Array(appOrSiteIndexer, exchangeIndexer, mediaIndexer, osIndexer, publisherIndexer,
       sizeIndexer, periodIndexer, interestsIndexer, appOrSiteEncoder, exchangeEncoder, mediaEncoder, osEncoder, publisherEncoder, sizeEncoder, periodEncoder,
-      interestsEncoder, assemblerIndexer, chisqSelector, lr ))
+      interestsEncoder, assemblerEncoder, chisqSelector, lr ))
 
     val splits = datas.randomSplit(Array(0.9, 0.1))
     val model = pipeline.fit(splits(0))
 
     val testedDatas = model.transform(splits(1))
     val labelAndPredictions = testedDatas.select("label", "prediction")
-    println(s" negatives = ${labelAndPredictions.filter(labelAndPredictions("label") === 0.0d).count}")
 
     import spark.implicits._
     val truep = labelAndPredictions.filter($"prediction" === 1.0).filter($"label" === $"prediction").count
@@ -110,6 +113,11 @@ object TabmoLogisticRegression{
 
     val predictedDatas = model.transform(datasToPredict)
 
-    predictedDatas.select($"appOrSite", $"bidfloor", $"exchange", $"interests", $"media", $"os", $"publisher", $"size", $"period", $"prediction").coalesce(1).write.option("header","true").csv(args(2))
+    predictedDatas.withColumnRenamed("prediction", "label")
+      .select($"appOrSite", $"bidfloor", $"exchange", $"interests", $"media", $"os", $"publisher", $"size", $"period", double2StringFunc($"label"))
+      .withColumnRenamed("UDF(label)", "label")
+      .coalesce(1)
+      .write.option("header","true")
+      .csv(args(2))
   }
 }
