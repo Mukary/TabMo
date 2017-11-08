@@ -4,7 +4,7 @@
 
 ### Prerequisites
 
-Have *Scala*, *SBT* and *Spark* installed
+Have *Scala 2.11*, *SBT 1.0.2* and *Spark 2.2.0* installed
 
 ### Steps
 * Download the project
@@ -17,9 +17,17 @@ You will get a generated jar in /target/scala-X.XX named simple-project_X.XX-X.X
 
 ### Steps
 
-1) Pre-process both training data and real data, then predict clickers in one shot
+1) Train data and predict raw data in one shot
+
 Use the command spark-submit :
-`spark-submit --class "TabmoLogisticRegression" --master local[2] target/scala-2.XX/nameOfTheJar.jar arg1 arg2`
+`spark-submit --class "TabmoLogisticRegression" --master local[2] path-to-jar/nameOfTheJar.jar arg1 arg2 arg3`
  with: 
- -  arg1 : /ABSOLUTE-PATH/TO/TRAINING-JSON-DATA
- -  arg2 : /ABSOLUTE-PATH/TO/CSV-DATA-TO-PREDICT
+ -  arg1 : path-to-training-data/train-data.json
+ -  arg2 : path-to-data-to-predict/raw-data.csv
+ -  arg3: directory name that will be created to generate predicted data file
+
+* Files can be in JSON format or CSV format
+
+Predicted data is a csv file located in directory-name/part-00000-642e21d2-1b48-4b22-99bb-7498b428b06c-c000.csv
+
+
