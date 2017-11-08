@@ -1,4 +1,4 @@
-# TabMo - Web intelligence project
+# TabMo - Web intelligence project - Challengers group
 
 ## Compile the sources
 
@@ -11,7 +11,7 @@ Have *Scala 2.11*, *SBT 1.0.2* and *Spark 2.2.0* installed
 * Go to the root of the project with a terminal
 * Launch `sbt package`
 
-You will get a generated jar in /target/scala-X.XX named simple-project_X.XX-X.X.jar
+You will get a generated jar in /target/scala-X.XX named challengers-wi-project_X.XX-X.X.jar
 
 ## Start the project
 
@@ -20,7 +20,7 @@ You will get a generated jar in /target/scala-X.XX named simple-project_X.XX-X.X
 1) Train data and predict raw data in one shot
 
 Use the command spark-submit :
-`spark-submit --class "TabmoLogisticRegression" --master local[2] path-to-jar/nameOfTheJar.jar arg1 arg2 arg3`
+`spark-submit --class "TabmoLogisticRegression" --master local[2] path-to-jar/challengers-wi-project_X.XX-X.X.jar arg1 arg2 arg3`
  with: 
  -  arg1 : path-to-training-data/train-data.json
  -  arg2 : path-to-data-to-predict/raw-data.csv
